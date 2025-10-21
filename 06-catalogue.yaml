@@ -27,8 +27,9 @@
         path: /app
 
     - name: downloading repo
-      ansible.builtin.get_url: curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip 
-      dest: /tmp/catalogue.zip
+      ansible.builtin.get_url: 
+        url: curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip 
+        dest: /tmp/catalogue.zip
 
     - name: unzipping repo
       ansible.builtin.unarchive: # unarchive means unzipping, archive means zipping
