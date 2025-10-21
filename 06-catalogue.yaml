@@ -67,6 +67,7 @@
 
     - name: connect to mongodb catalogue
       community.mongodb.mongodb_shell:
+        login_host: 172.31.10.62
         eval: db.getMongo().getDBNames().indexOf('catalogue')
       register: catalogue_output
 
