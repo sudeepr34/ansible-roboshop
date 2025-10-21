@@ -2,38 +2,38 @@
   host: catalogue
   become: yes
   tasks:
-  - name: disable default node js module
-    ansible.builtin.command: dnf module disable nodejs -y
+    - name: disable default node js module
+      ansible.builtin.command: dnf module disable nodejs -y
 
-  - name: enable nodejs 20 
-    ansible.builtin.command: dnf module enable nodejs:20 -y
+    - name: enable nodejs 20 
+      ansible.builtin.command: dnf module enable nodejs:20 -y
 
-  - name: install nodejs
-    ansible.builtin.package:
-      name: nodejs
-      state: present
+    - name: install nodejs
+      ansible.builtin.package:
+        name: nodejs
+        state: present
 
-  - name: create roboshop system user
-    ansible.builtin.user:
-      name: roboshop
-      comment: Roboshop System user
-      system: true
-      shell: /sbin/nologin
-      home: /app
+    - name: create roboshop system user
+      ansible.builtin.user:
+        name: roboshop
+        comment: Roboshop System user
+        system: true
+        shell: /sbin/nologin
+        home: /app
 
-  - name: create app directory 
-    ansible.builtin.file:
-      state: directory
-      path: /app
+    - name: create app directory 
+      ansible.builtin.file:
+        state: directory
+        path: /app
 
-  - name: downloading repo
-    ansible.builtin.get_url: curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip 
-    dest: /tmp/catalogue.zip
+    - name: downloading repo
+      ansible.builtin.get_url: curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip 
+      dest: /tmp/catalogue.zip
 
-  - name: unzipping repo
-    ansible.builtin.unarchive: # unarchive means unzipping, archive means zipping
-      src: /tmp/catalogue.zip
-      dest: /app
+    - name: unzipping repo
+      ansible.builtin.unarchive: # unarchive means unzipping, archive means zipping
+        src: /tmp/catalogue.zip
+        dest: /app
 
 
   
