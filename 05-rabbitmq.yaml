@@ -19,7 +19,7 @@
         state: started
 
     - name: adding user roboshop and roboshop123
-      communnity.rabbitmq.rabbitmq_user:
+      community.rabbitmq.rabbitmq_user:
         user: roboshop
         password: roboshop123
         permissions:
