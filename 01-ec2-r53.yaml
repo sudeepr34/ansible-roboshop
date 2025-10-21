@@ -6,7 +6,7 @@
     sg_id: sg-077ec06c304669947
     zone_d: Z09641963IY720R4NC0ON
     domain_name: sudeep.fun
-    instance: 
+    instances: 
     - mongodb
   tasks:
   - name: create ec2 instance
