@@ -4,8 +4,8 @@
   vars:
     ami_id: ami-09c813fb71547fc4f
     sg_id: sg-0389c3aeeb83a88bc
-    zone_id: Z0570547358EJBXGIO3Z3
-    domain_name: sudeep.fun.
+    zone_id: Z0100679J2OL04DU9TTS
+    domain_name: sudeep.fun
     instances: 
     - mongodb
     - redis
