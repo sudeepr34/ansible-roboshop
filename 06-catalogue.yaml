@@ -66,14 +66,21 @@
         state: present
 
     - name: connect to mongodb catalogue
-      community.mongodb.mongodb_shell:
-        login_host: 172.31.10.62
-        eval: db.getMongo().getDBNames().indexOf('catalogue')
+      ansible.builtin.command: mongosh 172.31.10.62 --quiet --eval "db.getMongo().getDBNames().indexOf('catalogue')"
       register: catalogue_output
+
+    # - name: connect to mongodb catalogue
+    #   community.mongodb.mongodb_shell:
+    #     login_host: 172.31.10.62
+    #     eval: db.getMongo().getDBNames().indexOf('catalogue')
+    #   register: catalogue_output
 
     - name: print catalogue catalogue_output
       ansible.builtin.debug:
         msg: "{{ catalogue_output }}"
+
+    # - name: load catalogue
+    #   ansible.builtin.shell: 
 
     
 
