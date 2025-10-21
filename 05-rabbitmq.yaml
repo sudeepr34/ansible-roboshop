@@ -26,6 +26,6 @@
           - vhost: /
             configure_priv: .*
             read_priv: .*
-            write: .*
+            write_priv: .*
         state: present
 
