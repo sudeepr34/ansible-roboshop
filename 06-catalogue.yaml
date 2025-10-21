@@ -37,5 +37,43 @@
         dest: /app
         remote_src: yes
 
+    - nmae: insall dependencies
+      community. general.npm:
+        path: /app
+
+    - name: copying service file 
+      ansible.builtin.copy:
+        src: catalogue.service
+        dest: /etc/systemd/system/catalogue.service
+
+    - name: copying mongo repo
+      ansible.builtin.copy:
+        src: mongo.repo
+        dest: /etc/yum.repos.d/mongo.repo
+
+    # - name: reloading daemon
+    #   ansible.builtin.command: systemctl daemon-reload
+
+    # - name: starting systemcl services
+    #   ansible.builtin.service:
+    #     name: catalogue 
+    #     enabled: yes
+    #     state: present
+
+    - name: install mangodb-mongosh
+      ansible.builtin.package:
+        name: mongodb-mongosh
+        state: present
+
+    - name: connect to mongodb catalogue
+      ansible.builtin.command: mongosh 172.31.22.68 --quiet --eval "db.getMongo().getDBNames().indexOf('catalogue')"
+      register: catalogue_output
+
+    - name: print catalogue catalogue_output
+      ansible.builtin.debug:
+        msg: "{{ catalogue_output }}"
+
+    
+
 
   
