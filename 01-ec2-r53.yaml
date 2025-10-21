@@ -3,8 +3,8 @@
   connection: local
   vars:
     ami_id: ami-09c813fb71547fc4f
-    sg_id: sg-077ec06c304669947
-    zone_d: Z09641963IY720R4NC0ON
+    sg_id: sg-0389c3aeeb83a88bc
+    zone_id: Z0096019LIBN42DIH7IN
     domain_name: sudeep.fun
     instances: 
     - mongodb
