@@ -51,15 +51,6 @@
         src: mongo.repo
         dest: /etc/yum.repos.d/mongo.repo
 
-    # - name: reloading daemon
-    #   ansible.builtin.command: systemctl daemon-reload
-
-    # - name: starting systemcl services
-    #   ansible.builtin.service:
-    #     name: catalogue 
-    #     enabled: yes
-    #     state: present
-
     - name: install mangodb-mongosh
       ansible.builtin.package:
         name: mongodb-mongosh
@@ -82,6 +73,15 @@
     - name: load catalogue
       ansible.builtin.shell: mongosh --host 172.31.10.62 </app/db/master-data.js
       when: catalogue_output.stdout | int < 0
+
+    - name: reloading daemon
+      ansible.builtin.command: systemctl daemon-reload
+
+    - name: starting systemcl services
+      ansible.builtin.service:
+        name: catalogue 
+        enabled: yes
+        state: present
 
     
 
