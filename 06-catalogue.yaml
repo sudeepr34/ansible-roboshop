@@ -67,7 +67,7 @@
 
     - name: connect to mongodb catalogue
       community.mongodb.mongodb_shell:
-        eval: mongosh 172.31.10.62 --quiet --eval "db.getMongo().getDBNames().indexOf('catalogue')"
+        eval: db.getMongo().getDBNames().indexOf('catalogue')
       register: catalogue_output
 
     - name: print catalogue catalogue_output
