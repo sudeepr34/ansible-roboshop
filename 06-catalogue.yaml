@@ -81,7 +81,7 @@
       ansible.builtin.service:
         name: catalogue 
         enabled: yes
-        state: present
+        state: started
 
     
 
