@@ -81,7 +81,7 @@
 
     - name: load catalogue
       ansible.builtin.shell: mongosh --host 172.31.10.62 </app/db/master-data.js
-      when: catalogue_output.stdout < 0
+      when: catalogue_output.stdout | int < 0
 
     
 
