@@ -21,11 +21,21 @@
         shell: /sbin/nologin
         home: /app
 
+    - name: remove app directory if exists
+      ansible.builtin.file:
+        path: /app
+        state: absent
+
     - name: create app directory 
       ansible.builtin.file:
         state: directory
         path: /app
 
+    - name: remove app directory if exists
+      ansible.builtin.file:
+        path: /tmp/catalogue.zip
+        state: absent
+        
     - name: downloading repo
       ansible.builtin.get_url: 
         url: https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip 
@@ -74,14 +84,21 @@
       ansible.builtin.shell: mongosh --host 172.31.10.62 </app/db/master-data.js
       when: catalogue_output.stdout | int < 0
 
-    - name: reloading daemon
-      ansible.builtin.command: systemctl daemon-reload
+    # - name: reloading daemon
+    #   ansible.builtin.command: systemctl daemon-reload
 
-    - name: starting systemcl services
-      ansible.builtin.service:
-        name: catalogue 
-        enabled: yes
+    # - name: starting systemcl services
+    #   ansible.builtin.service:
+    #     name: catalogue 
+    #     enabled: yes
+    #     state: started
+
+    - name: daemon relaod and started
+      ansible.builtin.systemd_service: 
+        name: catalogue
+        enabled: true
         state: started
+        daemon_reload: true
 
     
 
