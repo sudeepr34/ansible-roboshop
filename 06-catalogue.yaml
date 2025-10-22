@@ -31,11 +31,11 @@
         state: directory
         path: /app
 
-    - name: remove app directory if exists
+    - name: remove repo file if exists
       ansible.builtin.file:
         path: /tmp/catalogue.zip
         state: absent
-        
+
     - name: downloading repo
       ansible.builtin.get_url: 
         url: https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip 
