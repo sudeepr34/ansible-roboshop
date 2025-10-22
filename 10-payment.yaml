@@ -1,0 +1,59 @@
+- name: configure payments server
+  hosts: payment
+  tasks:
+    - name: installing python
+      ansible.builtin.dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+      - python
+      - gcc
+      - python3-devel
+
+    - name: create roboshop system user
+      ansible.builtin.user:
+        name: roboshop
+        comment: Roboshop System user
+        system: true
+        shell: /sbin/nologin
+        home: /app
+
+    - name: create app directory 
+      ansible.builtin.file:
+        state: directory
+        path: /app/payment
+
+    - name: remove repo file if exists
+      ansible.builtin.file:
+        path: /tmp/payment.zip
+        state: absent
+
+    - name: downloading repo
+      ansible.builtin.get_url: 
+        url: https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip
+        dest: /tmp/payment.zip
+
+    - name: unzipping repo
+      ansible.builtin.unarchive: # unarchive means unzipping, archive means zipping
+        src: /tmp/payment.zip
+        dest: /app
+        remote_src: yes
+
+    - name: install dependencies
+      ansible.builtin.pip:
+        requirements: requirements.txt
+        executable: 3.9
+      args: 
+        chdir: /app
+
+    - name: copying payment file 
+      ansible.builtin.copy:
+        src: payment.service
+        dest: /etc/systemd/system/payment.service
+
+    - name: daemon relaod and started
+      ansible.builtin.systemd_service: 
+        name: payment
+        enabled: true
+        state: started
+        daemon_reload: true
