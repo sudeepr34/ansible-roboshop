@@ -1,5 +1,6 @@
 - name: configure payments server
   hosts: payment
+  become: yes
   tasks:
     - name: installing python
       ansible.builtin.dnf:
