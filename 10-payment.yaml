@@ -1,60 +1,70 @@
-- name: configure payments server
+- name: Payment setup
   hosts: payment
-  become: yes
+  become: true
   tasks:
-    - name: installing python
+    - name: Install Python build deps
       ansible.builtin.dnf:
         name: "{{ item }}"
         state: present
-      loop:
-      - python
-      - gcc
-      - python3-devel
+      loop: [python3, gcc, python3-devel]
 
-    - name: create roboshop system user
+    - name: Create roboshop system user
       ansible.builtin.user:
         name: roboshop
-        comment: Roboshop System user
+        comment: Roboshop system user
         system: true
         shell: /sbin/nologin
         home: /app
+        create_home: true
 
-    - name: create app directory 
+    - name: Ensure /app directory
       ansible.builtin.file:
+        path: /app
         state: directory
-        path: /app/payment
+        owner: roboshop
+        group: roboshop
 
-    - name: remove repo file if exists
-      ansible.builtin.file:
-        path: /tmp/payment.zip
-        state: absent
-
-    - name: downloading repo
-      ansible.builtin.get_url: 
+    - name: Download payment artifact
+      ansible.builtin.get_url:
         url: https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip
         dest: /tmp/payment.zip
+        mode: "0644"
 
-    - name: unzipping repo
-      ansible.builtin.unarchive: # unarchive means unzipping, archive means zipping
+    - name: Unpack payment
+      ansible.builtin.unarchive:
         src: /tmp/payment.zip
         dest: /app
-        remote_src: yes
+        remote_src: true
+        owner: roboshop
+        group: roboshop
 
-    - name: install dependencies
+    - name: Install Python dependencies
       ansible.builtin.pip:
-        requirements: requirements.txt
-        executable: pip3.9
-      args: 
-        chdir: /app
+        requirements: /app/requirements.txt
+        executable: pip3
 
-    - name: copying payment file 
+    - name: Write payment environment file
+      ansible.builtin.copy:
+        dest: /etc/roboshop/payment.env
+        mode: "0600"
+        content: |
+          CART_HOST={{ cart_host }}
+          CART_PORT=8080
+          USER_HOST={{ user_host }}
+          USER_PORT=8080
+          AMQP_HOST={{ rabbitmq_host }}
+          AMQP_USER={{ rabbitmq_user }}
+          AMQP_PASS={{ rabbitmq_password }}
+
+    - name: Install payment systemd unit
       ansible.builtin.copy:
         src: payment.service
         dest: /etc/systemd/system/payment.service
+        mode: "0644"
 
-    - name: daemon relaod and started
-      ansible.builtin.systemd_service: 
+    - name: Enable and start payment
+      ansible.builtin.systemd:
         name: payment
         enabled: true
-        state: started
+        state: restarted
         daemon_reload: true

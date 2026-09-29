@@ -1,51 +1,53 @@
-- name: configure frontend server
+- name: Frontend setup
   hosts: frontend
-  become: yes
-  tasks: 
-  - name: disable default nginx
-    ansible.builtin.command: dnf module disable nginx -y
+  become: true
+  tasks:
+    - name: Disable default nginx module
+      ansible.builtin.command: dnf module disable nginx -y
+      changed_when: true
 
-  - name: enable nginx 1.24
-    ansible.builtin.command: dnf module enable nginx:1.24 -y
+    - name: Enable nginx 1.24
+      ansible.builtin.command: dnf module enable nginx:1.24 -y
+      changed_when: true
 
-  - name: install nginx
-    ansible.builtin.dnf:
-      name: nginx
-      state: present
+    - name: Install nginx
+      ansible.builtin.dnf:
+        name: nginx
+        state: present
 
-  - name: remove html directory
-    ansible.builtin.file:
-      state: absent
-      path: /usr/share/nginx/html/
+    - name: Reset html directory
+      ansible.builtin.file:
+        path: /usr/share/nginx/html
+        state: "{{ item }}"
+      loop: [absent, directory]
 
-  - name: create html directory
-    ansible.builtin.file:
-      path: /usr/share/nginx/html
-      state: directory
+    - name: Download frontend artifact
+      ansible.builtin.get_url:
+        url: https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
+        dest: /tmp/frontend.zip
+        mode: "0644"
 
-  - name: downloading repo
-    ansible.builtin.get_url: 
-      url: https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
-      dest: /tmp/frontend.zip
+    - name: Unpack frontend
+      ansible.builtin.unarchive:
+        src: /tmp/frontend.zip
+        dest: /usr/share/nginx/html
+        remote_src: true
 
-  - name: unzipping repo
-    ansible.builtin.unarchive: # unarchive means unzipping, archive means zipping
-      src: /tmp/frontend.zip
-      dest: /usr/share/nginx/html
-      remote_src: yes
+    - name: Install nginx.conf from template
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: "0644"
+      notify: Reload nginx
 
-  - name: delete default nginx conf
-    ansible.builtin.file:
-      state: absent
-      path: /etc/nginx/nginx.conf
+    - name: Enable and start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        enabled: true
+        state: started
 
-  - name: copy nginx conf file
-    ansible.builtin.copy:
-      src: nginx.conf 
-      dest: /etc/nginx/nginx.conf
-
-  - name: daemon relaod and started
-    ansible.builtin.systemd_service: 
-      name: nginx
-      enabled: true
-      state: restarted
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded

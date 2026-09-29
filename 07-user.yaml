@@ -1,59 +1,72 @@
-- name: user setup
+- name: User setup
   hosts: user
-  become: yes
+  become: true
   tasks:
-    - name: disable default node js module
+    - name: Disable default Node.js module
       ansible.builtin.command: dnf module disable nodejs -y
+      changed_when: true
 
-    - name: enable nodejs 20 
+    - name: Enable Node.js 20
       ansible.builtin.command: dnf module enable nodejs:20 -y
+      changed_when: true
 
-    - name: install nodejs
+    - name: Install Node.js
       ansible.builtin.package:
         name: nodejs
         state: present
 
-    - name: create roboshop system user
+    - name: Create roboshop system user
       ansible.builtin.user:
         name: roboshop
-        comment: Roboshop System user
+        comment: Roboshop system user
         system: true
         shell: /sbin/nologin
         home: /app
+        create_home: true
 
-    - name: create app directory 
+    - name: Ensure /app directory
       ansible.builtin.file:
-        state: directory
         path: /app
+        state: directory
+        owner: roboshop
+        group: roboshop
 
-    - name: remove repo file if exists
-      ansible.builtin.file:
-        path: /tmp/user.zip
-        state: absent
-
-    - name: downloading repo
-      ansible.builtin.get_url: 
+    - name: Download user artifact
+      ansible.builtin.get_url:
         url: https://roboshop-artifacts.s3.amazonaws.com/user-v3.zip
         dest: /tmp/user.zip
+        mode: "0644"
 
-    - name: unzipping repo
-      ansible.builtin.unarchive: # unarchive means unzipping, archive means zipping
+    - name: Unpack user
+      ansible.builtin.unarchive:
         src: /tmp/user.zip
         dest: /app
-        remote_src: yes
+        remote_src: true
+        owner: roboshop
+        group: roboshop
 
-    - name: install dependencies
+    - name: Install npm dependencies
       community.general.npm:
         path: /app
 
-    - name: copying service file 
+    - name: Write user environment file
+      ansible.builtin.copy:
+        dest: /etc/roboshop/user.env
+        mode: "0600"
+        content: |
+          MONGO=true
+          REDIS_URL=redis://{{ redis_host }}:6379
+          MONGO_URL=mongodb://{{ mongodb_host }}:27017/users
+
+    - name: Install user systemd unit
       ansible.builtin.copy:
         src: user.service
         dest: /etc/systemd/system/user.service
+        mode: "0644"
 
-    - name: daemon relaod and started
-      ansible.builtin.systemd_service: 
+    - name: Enable and start user
+      ansible.builtin.systemd:
         name: user
         enabled: true
-        state: started
+        state: restarted
         daemon_reload: true

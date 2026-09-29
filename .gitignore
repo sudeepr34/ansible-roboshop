@@ -1,0 +1,9 @@
+*.retry
+.vault_pass
+*.pem
+*.key
+inventory.local.ini
+group_vars/all.local.yml
+__pycache__/
+.idea/
+.vscode/
