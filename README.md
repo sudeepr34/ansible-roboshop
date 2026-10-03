@@ -42,6 +42,9 @@ ansible-playbook 06-catalogue.yaml 07-user.yaml 08-cart.yaml 09-shipping.yaml 10
 
 # 4) Edge
 ansible-playbook 11-frontend.yaml
+
+# 5) Alerts (needs a Prometheus host in [monitoring])
+ansible-playbook 12-alerts.yaml
 ```
 
 Or all application playbooks after hosts exist:
@@ -49,17 +52,18 @@ Or all application playbooks after hosts exist:
 ```bash
 ansible-playbook 02-mongodb.yaml 03-redis.yaml 04-mysql.yaml 05-rabbitmq.yaml \
   06-catalogue.yaml 07-user.yaml 08-cart.yaml 09-shipping.yaml 10-payment.yaml \
-  11-frontend.yaml
+  11-frontend.yaml 12-alerts.yaml
 ```
 
 ## Layout
 
 ```
-01-ec2-r53.yaml … 11-frontend.yaml   numbered playbooks
+01-ec2-r53.yaml … 12-alerts.yaml    numbered playbooks
 group_vars/all.yml                   shared hostnames + secrets
 inventory.ini                        hosts (DNS or IP)
 ansible.cfg                          key-based SSH defaults
 templates/nginx.conf.j2              frontend reverse-proxy
+alerts/roboshop.rules.yaml           Prometheus alert rules for the stack
 *.service                            systemd units (EnvironmentFile-based)
 ```
 
