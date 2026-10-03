@@ -1,0 +1,73 @@
+# Prometheus alerting rules for the RoboShop stack.
+# Deployed by 12-alerts.yaml to /etc/prometheus/rules/roboshop.rules.yaml.
+# Assumes node_exporter on every host and app/data-tier metrics
+# exposed as up{job="<service>"}.
+
+groups:
+  - name: roboshop-services
+    interval: 30s
+    rules:
+      - alert: RoboshopServiceDown
+        expr: up{job=~"catalogue|user|cart|shipping|payment|frontend|mongodb|redis|mysql|rabbitmq"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RoboShop service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} ({{ $labels.instance }}) has been unreachable for more than 2 minutes."
+
+      - alert: RoboshopHighErrorRate
+        expr: |
+          (
+            sum by (job) (rate(http_requests_total{job=~"catalogue|user|cart|shipping|payment", status=~"5.."}[5m]))
+            /
+            sum by (job) (rate(http_requests_total{job=~"catalogue|user|cart|shipping|payment"}[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx rate on {{ $labels.job }}"
+          description: "{{ $labels.job }} 5xx rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+  - name: roboshop-nodes
+    interval: 30s
+    rules:
+      - alert: RoboshopNodeHighCPU
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU on {{ $labels.instance }}"
+          description: "CPU usage above 80% for more than 5 minutes."
+
+      - alert: RoboshopNodeHighMemory
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage above 90% for more than 5 minutes."
+
+      - alert: RoboshopDiskFillingUp
+        expr: predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}[1h], 4 * 3600) < 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk filling up on {{ $labels.instance }}"
+          description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} is predicted to fill within 4 hours."
+
+  - name: roboshop-messaging
+    interval: 30s
+    rules:
+      - alert: RoboshopRabbitMQQueueGrowing
+        expr: rabbitmq_queue_messages{queue=~"shipping|payment"} > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ queue {{ $labels.queue }} growing"
+          description: "{{ $value }} messages piling up in queue {{ $labels.queue }} for more than 10 minutes - consumers may be stuck."

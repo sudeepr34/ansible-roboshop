@@ -1,0 +1,30 @@
+- name: Deploy Prometheus alert rules for RoboShop
+  hosts: monitoring
+  become: true
+  tasks:
+    - name: Ensure Prometheus rules directory exists
+      ansible.builtin.file:
+        path: /etc/prometheus/rules
+        state: directory
+        mode: "0755"
+
+    - name: Deploy RoboShop alert rules
+      ansible.builtin.copy:
+        src: alerts/roboshop.rules.yaml
+        dest: /etc/prometheus/rules/roboshop.rules.yaml
+        mode: "0644"
+      notify: Reload Prometheus
+
+    - name: Validate alert rules syntax
+      ansible.builtin.command:
+        cmd: promtool check rules /etc/prometheus/rules/roboshop.rules.yaml
+      changed_when: false
+      failed_when: false
+
+  handlers:
+    - name: Reload Prometheus
+      ansible.builtin.uri:
+        url: http://localhost:9090/-/reload
+        method: POST
+        status_code: 200
+      failed_when: false
